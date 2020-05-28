@@ -19,8 +19,17 @@ class TimeMachineApi(HTTPRequest):
         return self._delete(self.API_URL + "datasets/",data)
 
     def rename_dataset(self,data):
-        return self._put(self.API_URL + "datasets/", data)
+        return self._put(self.API_URL + "datasets/",data)
 
     #Snapshots Commands
     def get_snapshots(self):
         return self._get(self.API_URL + "snapshots/")
+
+    def create_snapshot(self,data):
+        return self._post(self.API_URL + "snapshots/",data)
+
+    def delete_snapshot(self,data):
+        return self._delete(self.API_URL + "snapshots/",data)
+
+    def rename_snapshot(self,data):
+        return self._put(self.API_URL + "snapshots/",data)

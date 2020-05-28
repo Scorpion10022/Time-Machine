@@ -34,17 +34,16 @@ def datasets(ctx):
 @datasets.command(help="Get datasets list")
 @click.pass_obj
 def get(api):
-    sys_datasets = api.get_datasets()
-    pprint(sys_datasets)
+    pprint(api.get_datasets())
 
 @datasets.command(help="Create a new dataset")
 @click.option("--name", required=True, help="Name of the new dataset")
 @click.pass_obj
 def create(api,name):
     if api.create_dataset({"name": f"hybrid/{name}"}):
-        pass
+        pprint(f"Dataset created with name: {name}")
     else:
-        print("Error creating dataset or invalid dataset format")
+        pprint("Error creating dataset or invalid dataset format")
 
 @datasets.command(help="Delete a new dataset")
 @click.option("--name", required=True, help="Name of the dataset to be deleted")
@@ -80,8 +79,42 @@ def snapshots(ctx):
 @snapshots.command(help="Get snapshots list")
 @click.pass_obj
 def get(api):
-    sys_snapshots = api.get_snapshots()
-    pprint(sys_snapshots)
+    pprint(api.get_snapshots())
+
+@snapshots.command(help="Create a new snapshot")
+@click.option("--ds-name", required=True, help="Name of the dataset")
+@click.option("--ss-name", required=False, help="Name of the snapshot")
+@click.pass_obj
+def create(api,ds_name,ss_name):
+    if ss_name:
+        api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
+    elif api.create_snapshot({"dataset": f"hybrid/{ds_name}" , "snapshot": f"{ss_name}"}):
+        print("nu")
+    else:
+        print("Error creating snapshot or invalid dataset format")
+
+@snapshots.command(help="Delete a snapshot")
+@click.option("--name", required=True, help="Name of the snapshot")
+@click.pass_obj
+def delete(api,name):
+    pprint(f"hybrid/{name}")
+    r = api.delete_snapshot({"name": f"hybrid/{name}"})
+    if r.status_code == 200:
+        pprint("Snapshot deleted")
+    else:
+        pprint("Error deleting snapshot or invalid format")
+
+
+@snapshots.command(help="Rename a snapshot")
+@click.option("--name", required=True, help="Name of the snapshot to be renamed")
+@click.option("--new-name", required=True, help="New name of the snapshot")
+@click.pass_obj
+def rename(api,name,new_name):
+    r = api.rename_snapshot({"from_name" : f"hybrid/{name}", "rename_to" : f"hybrid/{new_name}"})
+    if r.status_code == 200:
+        pprint("Snapshot renamed")
+    else:
+        pprint("Error renaming snapshot or invalid dataset format")
 
 
 if __name__ == "__main__":
