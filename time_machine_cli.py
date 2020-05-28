@@ -86,19 +86,26 @@ def get(api):
 @click.option("--ss-name", required=False, help="Name of the snapshot")
 @click.pass_obj
 def create(api,ds_name,ss_name):
-    if ss_name:
-        api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
-    elif api.create_snapshot({"dataset": f"hybrid/{ds_name}" , "snapshot": f"{ss_name}"}):
-        print("nu")
+    if ds_name == "hybrid":
+        if ss_name:
+            r = api.create_snapshot({"dataset": f"{ds_name}"})
+        else:
+            r = api.create_snapshot({"dataset": f"{ds_name}" , "snapshot": f"{ss_name}"})
     else:
-        print("Error creating snapshot or invalid dataset format")
+        if ss_name:
+            r = api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
+        else:
+            r = api.create_snapshot({"dataset": f"hybrid/{ds_name}" , "snapshot": f"{ss_name}"})
 
 @snapshots.command(help="Delete a snapshot")
 @click.option("--name", required=True, help="Name of the snapshot")
 @click.pass_obj
 def delete(api,name):
     pprint(f"hybrid/{name}")
-    r = api.delete_snapshot({"name": f"hybrid/{name}"})
+    if name.split("@")[0] == "hybrid":
+        r = api.delete_snapshot({"name": f"{name}"})
+    else:
+        r = api.delete_snapshot({"name": f"hybrid/{name}"})
     if r.status_code == 200:
         pprint("Snapshot deleted")
     else:
@@ -106,16 +113,33 @@ def delete(api,name):
 
 
 @snapshots.command(help="Rename a snapshot")
-@click.option("--name", required=True, help="Name of the snapshot to be renamed")
-@click.option("--new-name", required=True, help="New name of the snapshot")
+@click.option("--name", required=True, help="Name of the snapshot to be renamed( dataset@snapshot_name)")
+@click.option("--new-name", required=True, help="New name of the snapshot( dataset@new_snapshot_name)")
 @click.pass_obj
 def rename(api,name,new_name):
-    r = api.rename_snapshot({"from_name" : f"hybrid/{name}", "rename_to" : f"hybrid/{new_name}"})
+    if name.split("@")[0] == "hybrid":
+        r = api.rename_snapshot({"from_name" : f"{name}", "rename_to" : f"{new_name}"})
+    else:
+        r = api.rename_snapshot({"from_name" : f"hybrid/{name}", "rename_to" : f"hybrid/{new_name}"})
     if r.status_code == 200:
         pprint("Snapshot renamed")
     else:
         pprint("Error renaming snapshot or invalid dataset format")
 
+@snapshots.command(help="Rollback to a snapshot")
+@click.option("--name", required=True, help="Name of the snapshot to be rolledbacked to.")
+@click.pass_obj
+def rollback(api,name):
+    if name.split("@")[0] == "hybrid":
+        r = api.rollback_snapshot({"name":f"{name}"})
+    else:
+        r = api.rollback_snapshot({"name":f"hybrid/{name}"})
+    if r.status_code == 200:
+        pprint("Rollback succes")
+    elif r.status_code == 404:
+        pprint("Snapshot not found")
+    else:
+        pprint("Error rolling back to this snapshot")
 
 if __name__ == "__main__":
     try:

@@ -33,3 +33,9 @@ class TimeMachineApi(HTTPRequest):
 
     def rename_snapshot(self,data):
         return self._put(self.API_URL + "snapshots/",data)
+
+    def clone_snapshot(self,data):
+        pass
+
+    def rollback_snapshot(self,data):
+        return self._put(self.API_URL + "snapshots/rollback",data)
