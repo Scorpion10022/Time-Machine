@@ -1,6 +1,8 @@
 import click
 from time_machine_api import *
 
+#Needs to be done: Create a check metod in api
+
 @click.group(help="Time Machine Api")
 @click.option(
     "--verbose",
@@ -96,6 +98,12 @@ def create(api,ds_name,ss_name):
             r = api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
         else:
             r = api.create_snapshot({"dataset": f"hybrid/{ds_name}" , "snapshot": f"{ss_name}"})
+    if r.status_code == 200:
+        pprint("Snapshot created")
+    elif r.staus_code == 404:
+        pprint("Dataset not found")
+    else:
+        pprint("Error creating snapshot or invalid dataset format")
 
 @snapshots.command(help="Delete a snapshot")
 @click.option("--name", required=True, help="Name of the snapshot")
@@ -140,6 +148,20 @@ def rollback(api,name):
         pprint("Snapshot not found")
     else:
         pprint("Error rolling back to this snapshot")
+
+#Under construction
+@snapshots.command(help="Clone a snapshot")
+@click.option("--ds", required=True, help="Name of the new dataset to be cloned into.")
+@click.option("--name", required=True, help="Name of the snapshot to be cloned.")
+@click.pass_obj
+def clone(api,ds,name):
+    r = api.clone_snapshot({"dataset": f"hybrid/{ds}", "snapshot": f"hybrid/{name}"})
+    if r.status_code == 200:
+        pprint("Clone succes")
+    elif r.status_code == 404:
+        pprint("Snapshot not found")
+    else:
+        pprint("Error creating clone or invalid snapshot / dataset name")
 
 if __name__ == "__main__":
     try:

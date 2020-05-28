@@ -1,5 +1,7 @@
 from HTTPReq import *
 
+#Needs to be done: Create a check metod in api
+
 class TimeMachineApi(HTTPRequest):
     def __init__(self):
         self.API_URL = "http://192.168.1.111:8080/v1/"
@@ -35,7 +37,7 @@ class TimeMachineApi(HTTPRequest):
         return self._put(self.API_URL + "snapshots/",data)
 
     def clone_snapshot(self,data):
-        pass
+        return self._put(self.API_URL + "snapshots/clone",data)
 
     def rollback_snapshot(self,data):
         return self._put(self.API_URL + "snapshots/rollback",data)
