@@ -1,8 +1,6 @@
 import click
 from time_machine_api import *
 
-#Needs to be done: Create a check metod in api
-
 @click.group(help="Time Machine Api")
 @click.option(
     "--verbose",
@@ -42,22 +40,15 @@ def get(api):
 @click.option("--name", required=True, help="Name of the new dataset")
 @click.pass_obj
 def create(api,name):
-    if api.create_dataset({"name": f"hybrid/{name}"}):
-        pprint(f"Dataset created with name: {name}")
-    else:
-        pprint("Error creating dataset or invalid dataset format")
+    r = api.create_dataset({"name": f"hybrid/{name}"})
+    api.check_response(r,"create","dataset")
 
 @datasets.command(help="Delete a new dataset")
 @click.option("--name", required=True, help="Name of the dataset to be deleted")
 @click.pass_obj
 def delete(api,name):
     r = api.delete_dataset({"name": f"hybrid/{name}"})
-    if r.status_code == 200:
-        pprint("Dataset deleted")
-    elif r.status_code == 404:
-        pprint("Dataset not found")
-    else:
-        pprint("Error deleting dataset or invalid dataset format")
+    api.check_response(r,"delete","dataset")
 
 @datasets.command(help="Rename a dataset")
 @click.option("--name", required=True, help="Name of the dataset to be renamed")
@@ -65,12 +56,7 @@ def delete(api,name):
 @click.pass_obj
 def rename(api,name,new_name):
     r = api.rename_dataset({"from_name" : f"hybrid/{name}", "rename_to" : f"hybrid/{new_name}"})
-    if r.status_code == 200:
-        pprint("Dataset renamed")
-    elif r.status_code == 404:
-        pprint("Dataset not found")
-    else:
-        pprint("Error renaming dataset or invalid dataset format")
+    api.check_response(r,"rename","dataset")
 
 #Snapshots Commands
 @cli.group(help="Snapshots Commands")
@@ -90,20 +76,15 @@ def get(api):
 def create(api,ds_name,ss_name):
     if ds_name == "hybrid":
         if ss_name:
-            r = api.create_snapshot({"dataset": f"{ds_name}"})
-        else:
             r = api.create_snapshot({"dataset": f"{ds_name}" , "snapshot": f"{ss_name}"})
+        else:
+            r = api.create_snapshot({"dataset": f"{ds_name}"})
     else:
         if ss_name:
-            r = api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
-        else:
             r = api.create_snapshot({"dataset": f"hybrid/{ds_name}" , "snapshot": f"{ss_name}"})
-    if r.status_code == 200:
-        pprint("Snapshot created")
-    elif r.staus_code == 404:
-        pprint("Dataset not found")
-    else:
-        pprint("Error creating snapshot or invalid dataset format")
+        else:
+            r = api.create_snapshot({"dataset": f"hybrid/{ds_name}"})
+    api.check_response(r,"create","snapshot")
 
 @snapshots.command(help="Delete a snapshot")
 @click.option("--name", required=True, help="Name of the snapshot")
@@ -114,11 +95,7 @@ def delete(api,name):
         r = api.delete_snapshot({"name": f"{name}"})
     else:
         r = api.delete_snapshot({"name": f"hybrid/{name}"})
-    if r.status_code == 200:
-        pprint("Snapshot deleted")
-    else:
-        pprint("Error deleting snapshot or invalid format")
-
+    api.check_response(r,"delete","snapshot")
 
 @snapshots.command(help="Rename a snapshot")
 @click.option("--name", required=True, help="Name of the snapshot to be renamed( dataset@snapshot_name)")
@@ -129,10 +106,7 @@ def rename(api,name,new_name):
         r = api.rename_snapshot({"from_name" : f"{name}", "rename_to" : f"{new_name}"})
     else:
         r = api.rename_snapshot({"from_name" : f"hybrid/{name}", "rename_to" : f"hybrid/{new_name}"})
-    if r.status_code == 200:
-        pprint("Snapshot renamed")
-    else:
-        pprint("Error renaming snapshot or invalid dataset format")
+    api.check_response(r,"rename","snapshot")
 
 @snapshots.command(help="Rollback to a snapshot")
 @click.option("--name", required=True, help="Name of the snapshot to be rolledbacked to.")
@@ -142,26 +116,18 @@ def rollback(api,name):
         r = api.rollback_snapshot({"name":f"{name}"})
     else:
         r = api.rollback_snapshot({"name":f"hybrid/{name}"})
-    if r.status_code == 200:
-        pprint("Rollback succes")
-    elif r.status_code == 404:
-        pprint("Snapshot not found")
-    else:
-        pprint("Error rolling back to this snapshot")
+    api.check_response(r,"rollback","snapshot")
 
-#Under construction
 @snapshots.command(help="Clone a snapshot")
-@click.option("--ds", required=True, help="Name of the new dataset to be cloned into.")
-@click.option("--name", required=True, help="Name of the snapshot to be cloned.")
+@click.option("--ds-name", required=True, help="Name of the new dataset to be cloned into.")
+@click.option("--ss-name", required=True, help="Name of the snapshot to be cloned.")
 @click.pass_obj
-def clone(api,ds,name):
-    r = api.clone_snapshot({"dataset": f"hybrid/{ds}", "snapshot": f"hybrid/{name}"})
-    if r.status_code == 200:
-        pprint("Clone succes")
-    elif r.status_code == 404:
-        pprint("Snapshot not found")
+def clone(api,ds_name,ss_name):
+    if ss_name.split("@")[0] == "hybrid":
+        r = api.clone_snapshot({"dataset": f"hybrid/{ds_name}", "snapshot": f"{ss_name}"})
     else:
-        pprint("Error creating clone or invalid snapshot / dataset name")
+        r = api.clone_snapshot({"dataset": f"hybrid/{ds_name}", "snapshot": f"hybrid/{ss_name}"})
+    api.check_response(r,"clone","snapshot")
 
 if __name__ == "__main__":
     try:
